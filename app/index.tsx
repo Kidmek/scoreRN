@@ -22,7 +22,7 @@ import {
   saveScoredBalls,
   storePlayers,
 } from '~/utils/store';
-
+const width = Dimensions.get('screen').width;
 export default function Page() {
   const [players, setPlayers] = useState([
     {
@@ -71,6 +71,7 @@ export default function Page() {
 
   const history = useRef<HistoryType[]>([]);
   const scoredBalls = useRef<number[]>([]);
+  const scrollRef = useRef<ScrollView>(null);
   const [current, setCurrent] = useState(1);
   const [popUpVisible, setPopUpVisible] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
@@ -203,7 +204,7 @@ export default function Page() {
 
   useEffect(() => {
     return () => {
-      console.log('Saving Scored:', scoredBalls.current);
+      // console.log('Saving Scored:', scoredBalls.current);
       saveScoredBalls(scoredBalls.current);
     };
   }, [scoredBalls]);
@@ -222,18 +223,27 @@ export default function Page() {
     });
     getScoredBalls().then((value) => {
       if (value) {
-        console.log('Saved Scored:', value);
+        // console.log('Saved Scored:', value);
         scoredBalls.current = value;
       }
     });
   }, []);
 
+  useEffect(() => {
+    const singleElement = width / 12 + 15;
+    scrollRef.current?.scrollTo({
+      x: singleElement * (current - 5),
+      animated: true,
+    });
+  }, [current]);
+
   return (
     <View style={styles.container}>
       <View style={styles.main}>
         <Stack.Screen options={{ title: 'Score', headerRight: () => <RevertButton /> }} />
+
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.sliderContainer}>
+          <ScrollView horizontal contentContainerStyle={styles.sliderContainer} ref={scrollRef}>
             {Array.from({ length: 15 }, (_, i) => i + 1).map((ball) => (
               <TouchableOpacity
                 onPress={() => setCurrent(ball)}
@@ -247,7 +257,7 @@ export default function Page() {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
           <View style={styles.playersList}>
             {SinglePlayer(0)}
             {SinglePlayer(1)}
@@ -336,7 +346,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   content: {
-    flex: 1,
+    // flex: 1,
     paddingVertical: 24,
     gap: 30,
     flexDirection: 'column',
@@ -365,15 +375,17 @@ const styles = StyleSheet.create({
   },
   sliderContainer: {
     flexDirection: 'row',
-    gap: 2.5,
+    gap: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   ball: {
     borderRadius: 50,
     borderWidth: StyleSheet.hairlineWidth,
-    width: Dimensions.get('screen').width / 17,
-    height: Dimensions.get('screen').width / 17,
+    width: width / 12,
+    height: width / 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
